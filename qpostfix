@@ -1,0 +1,93 @@
+#!/bin/bash
+
+TARGET=""
+QUIET=false
+HELP=false
+
+mydate=$(date)
+
+qcount()
+{
+	myq=$(postqueue -j)
+	activ=$(echo "$myq" | jq -s '[.[] | select(.queue_name == "active")] | length')
+	incom=$(echo "$myq" | jq -s '[.[] | select(.queue_name == "incoming")] | length')
+	defrd=$(echo "$myq" | jq -s '[.[] | select(.queue_name == "deferred")] | length')
+	qhold=$(echo "$myq" | jq -s '[.[] | select(.queue_name == "hold")] | length')
+	total=$(echo "$myq" | jq -s '[.[] ] | length')
+}
+
+for args in "$@"; do
+	case "$args" in
+		active)
+			TARGET="active"
+		;;
+	
+		incoming)
+			TARGET="incoming"
+		;;
+	
+		deferred)
+			TARGET="deferred"
+		;;
+
+		-h | --help)
+			HELP=true
+		;;
+
+		-q)
+			QUIET=true
+		;;
+	esac
+done
+
+if [ "$HELP" == true ]; then
+	echo -e "\nUsage: $(basename $0) [-h | --help] [-q [incoming | active | deferred]]\n"
+	echo -e " $(basename $0)       - Queue mail summary"
+	echo -e " -h | --help    - this help"
+	echo -e " -q             - quiet"
+	echo -e " active         - queue active"
+	echo -e " deferred       - queue deferred\n"
+elif [ "$TARGET" == "deferred" ]; then
+	if [ "$QUIET" = true ]; then
+		qcount
+		echo "$defrd"
+	else
+		echo -en "\e[37mCounting queue... \e[33m\e[5mPlease wait.\e[0m"
+		qcount
+		echo -en "\r\033[0K"
+		echo "queie deferred = $defrd"
+	fi
+elif [ "$TARGET" == "active" ]; then
+	if [ "$QUIET" = true ]; then
+		qcount
+		echo "$activ"
+	else
+		echo -en "\e[37mCounting queue... \e[33m\e[5mPlease wait.\e[0m"
+		qcount
+		echo -en "\r\033[0K"
+		echo "queue active = $activ"
+	fi
+elif [ "$TARGET" == "incoming" ]; then
+        if [ "$QUIET" = true ]; then
+		qcount
+                echo "$incom"
+        else
+		echo -en "\e[37mCounting queue... \e[33m\e[5mPlease wait.\e[0m"
+		qcount
+		echo -en "\r\033[0K"
+                echo "queue incoming = $incom"
+        fi
+else
+	echo -en "\e[37mCounting queue... \e[33m\e[5mPlease wait.\e[0m"
+	qcount
+	echo -en "\r\033[0K"
+	echo -e "\n \e[1m\e[4mPostfix Queue Summary\e[0m"
+	printf "%-20s %6s\n" " queue incoming =" "$incom"
+	printf "%-20s %6s\n" " queue active   =" "$activ"
+	printf "%-20s %6s\n" " queue deferred =" "$defrd"
+	printf " \e[4m%-20s %5s\e[0m\n" "queue hole     =" "$qhold"
+	printf "%-20s %6s\n" " total queue    =" "$total"
+	echo -e "----------------------------"
+	echo -e "$mydate"
+	echo -e "----------------------------"
+fi
