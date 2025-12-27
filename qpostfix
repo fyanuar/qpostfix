@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) 2025 [fyanuar]
+# This script is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License.
 
 TARGET=""
 QUIET=false
@@ -30,6 +34,10 @@ for args in "$@"; do
 			TARGET="deferred"
 		;;
 
+		hold)
+			TARGET="hold"
+		;;
+
 		-h | --help)
 			HELP=true
 		;;
@@ -45,8 +53,10 @@ if [ "$HELP" == true ]; then
 	echo -e " $(basename $0)       - Queue mail summary"
 	echo -e " -h | --help    - this help"
 	echo -e " -q             - quiet"
-	echo -e " active         - queue active"
-	echo -e " deferred       - queue deferred\n"
+	echo -e " incoming       - incoming queue"
+	echo -e " active         - active queue"
+	echo -e " deferred       - deferred queue"
+	echo -e " hold           - hold queue\n"
 elif [ "$TARGET" == "deferred" ]; then
 	if [ "$QUIET" = true ]; then
 		qcount
@@ -77,6 +87,16 @@ elif [ "$TARGET" == "incoming" ]; then
 		echo -en "\r\033[0K"
                 echo "queue incoming = $incom"
         fi
+elif [ "$TARGET" == "hold" ]; then
+	if [ "$QUIET" = true ]; then
+		qcount
+		echo "$hold"
+	else
+		echo -en "\e[37mCounting queue... \e[33m\e[5mPlease wait.\e[0m"
+		qcount
+		echo -en "\r\033[0K"
+		echo "queue hold = $hold"
+	fi
 else
 	echo -en "\e[37mCounting queue... \e[33m\e[5mPlease wait.\e[0m"
 	qcount
@@ -85,7 +105,7 @@ else
 	printf "%-20s %6s\n" " queue incoming =" "$incom"
 	printf "%-20s %6s\n" " queue active   =" "$activ"
 	printf "%-20s %6s\n" " queue deferred =" "$defrd"
-	printf " \e[4m%-20s %5s\e[0m\n" "queue hole     =" "$qhold"
+	printf " \e[4m%-20s %5s\e[0m\n" "queue hold     =" "$qhold"
 	printf "%-20s %6s\n" " total queue    =" "$total"
 	echo -e "----------------------------"
 	echo -e "$mydate"
