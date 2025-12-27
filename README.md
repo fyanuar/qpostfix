@@ -1,7 +1,7 @@
 # QPostfix
 Postfix Queue Tools
 
-## Usaege
+## Usage
 ```
 qpostfix [-h | --help] [-q [incoming | active | deferred]]
 
